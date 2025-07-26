@@ -2,3 +2,4 @@ bacpypes
 fastapi
 uvicorn
 utils
+gevent
