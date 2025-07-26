@@ -1,0 +1,31 @@
+[Unit]
+Description=Living Labs - Smart Room AC App Service
+Requires=network-online.target
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Restart=always
+RestartSec=10s
+User=dev_admin
+Group=dev_admin
+Type=idle
+
+WorkingDirectory=/home/dev_admin/scrc
+
+ExecStart=/home/dev_admin/scrc/env/bin/python3 /home/dev_admin/scrc/env/bin/sr_ac_app --config=SmartRoom/default-sr-ac.config
+
+Environment=VIRTUAL_ENV=/home/dev_admin/scrc/env
+Environment=SCRC_COMMON=/home/dev_admin/scrc/Common
+Environment=PATH=$VIRTUAL_ENV/bin:$SCRC_COMMON:$PATH
+Environment=PYTHONUNBUFFERED=1
+Environment=OM2M_UN=test
+Environment=OM2M_PD=test
+
+StandardOutput=file:/var/log/scrc/sr_ac_app.log
+StandardError=file:/var/log/scrc/sr_ac_app_err.log
+
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

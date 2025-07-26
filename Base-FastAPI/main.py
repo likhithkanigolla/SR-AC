@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from bacnet_client import BACnetReader
 from config_utils import load_config, get_node_info
 import os
+import sys
 
 app = FastAPI()
 
@@ -17,6 +18,9 @@ object_name = config['bacnet']['local_interface']['object_name']
 object_id = config['bacnet']['local_interface']['object_id']
 bacnet_reader = BACnetReader(device_address, object_name, object_id)
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../Original-Code/Common')))
+from Bacnet_Client import Bacnet_Client
+
 @app.get("/read_property")
 def read_property(target_ip: str, obj_type: str, instance: int, prop: str):
     bacnet = BACnetReader("10.4.20.198/20:47809", "LivingLabs", 599)
@@ -25,12 +29,15 @@ def read_property(target_ip: str, obj_type: str, instance: int, prop: str):
 
 @app.get("/read_node_92")
 def read_node_92():
-    if not node_92_info:
-        return {"error": "node_92 not found in config"}
-    sensor = config['sensors']['sensor_1']
-    target_ip = config['bacnet']['dest']['device_address'].split(':')[0]
-    obj_type = sensor['data_type'] if 'data_type' in sensor else 'analogInput'
-    instance = int(node_92_info['src_name'])
-    prop = 'presentValue'
-    result = bacnet_reader.read_property(target_ip, obj_type, instance, prop)
-    return {"node_92_response": result}
+    # Use the original Bacnet_Client to get all node data
+    bacnet_client = Bacnet_Client(CONFIG_PATH)
+    all_data = bacnet_client.get_data()
+    # Find node_92 data
+    node_92_data = next((item for item in all_data if item['node_id'] == 'node_92'), None)
+    if not node_92_data:
+        return {"error": "node_92 not found in data"}
+    # Convert sensors object to dict if needed
+    sensors = node_92_data['sensors']
+    if hasattr(sensors, 'to_dict'):
+        sensors = sensors.to_dict()
+    return {"node_92": sensors}
