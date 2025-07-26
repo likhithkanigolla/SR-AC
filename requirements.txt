@@ -1,0 +1,3 @@
+bacpypes
+fastapi
+uvicorn
