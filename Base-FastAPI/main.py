@@ -18,8 +18,9 @@ object_name = config['bacnet']['local_interface']['object_name']
 object_id = config['bacnet']['local_interface']['object_id']
 bacnet_reader = BACnetReader(device_address, object_name, object_id)
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../Original-Code/Common')))
-from Bacnet_Client import Bacnet_Client
+# Ensure the correct utils.py is imported (local, not PyPI)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../Original-Code/Common')))
+from bacnet_client_orig import Bacnet_Client
 
 @app.get("/read_property")
 def read_property(target_ip: str, obj_type: str, instance: int, prop: str):
