@@ -47,13 +47,14 @@ def control_ac(node_id: str, request: Request, turn_on: bool = Body(..., embed=T
     # Import bacpypes modules here to avoid import errors at startup
     from bacpypes.apdu import WritePropertyRequest
     from bacpypes.primitivedata import Boolean
+    from bacpypes.constructeddata import Any
     from bacpypes.pdu import Address
     from bacpypes.core import deferred, run
     from bacpypes.iocb import IOCB
     request_apdu = WritePropertyRequest(
         objectIdentifier=(object_type, instance_id),
         propertyIdentifier='presentValue',
-        propertyValue=Boolean(turn_on),
+        propertyValue=Any(Boolean(turn_on)),
     )
     request_apdu.pduDestination = Address(dest_addrs)
     iocb = IOCB(request_apdu)
