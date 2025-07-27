@@ -3,3 +3,6 @@ fastapi
 uvicorn
 utils
 gevent
+requests
+PyYAML
+pyzmq

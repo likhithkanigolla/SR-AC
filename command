@@ -1,0 +1,1 @@
+PYTHONPATH=Base-FastAPI venv/bin/uvicorn Base-FastAPI.main:app --reload --host 0.0.0.0 --port 3042

@@ -40,7 +40,7 @@ utils.setup_logging()
 _log = logging.getLogger(__name__)
 
 # some debugging
-_debug = 0
+_debug = 1  # Enable debug logging for ReadPointListThread
 
 
 @bacpypes_debugging
