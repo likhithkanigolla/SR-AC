@@ -53,7 +53,7 @@ def control_ac(node_id: str, request: Request, turn_on: bool = Body(..., embed=T
     request_apdu = WritePropertyRequest(
         objectIdentifier=(object_type, instance_id),
         propertyIdentifier='presentValue',
-        propertyValue=Boolean(value),
+        propertyValue=Boolean(turn_on),
     )
     request_apdu.pduDestination = Address(dest_addrs)
     iocb = IOCB(request_apdu)
