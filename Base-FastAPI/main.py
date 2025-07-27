@@ -1,5 +1,11 @@
 # main.py
 from fastapi import FastAPI, Request, Body
+from bacpypes.apdu import WritePropertyRequest
+from bacpypes.primitivedata import Boolean
+from bacpypes.constructeddata import Any
+from bacpypes.pdu import Address
+from bacpypes.core import deferred, run, stop
+from bacpypes.iocb import IOCB
 import os
 import sys
 
@@ -44,22 +50,17 @@ def control_ac(node_id: str, request: Request, turn_on: bool = Body(..., embed=T
     object_type = bacnet_client._sensors[sensor_id]['data_type']
     instance_id = int(bacnet_client._sensors[sensor_id]['src_name']) + bac_id * 256
     value = 1 if turn_on else 0
-    # Import bacpypes modules here to avoid import errors at startup
-    from bacpypes.apdu import WritePropertyRequest
-    from bacpypes.primitivedata import Boolean
-    from bacpypes.constructeddata import Any
-    from bacpypes.pdu import Address
-    from bacpypes.core import deferred, run
-    from bacpypes.iocb import IOCB
     request_apdu = WritePropertyRequest(
         objectIdentifier=(object_type, instance_id),
         propertyIdentifier='presentValue',
         propertyValue=Any(Boolean(turn_on)),
+        priority=8,  # Use a higher priority for reliability
     )
     request_apdu.pduDestination = Address(dest_addrs)
     iocb = IOCB(request_apdu)
     deferred(bacnet_client._this_application.request_io, iocb)
     run()
+    stop()
     if iocb.ioError:
         return {"error": str(iocb.ioError)}
     return {"status": "success", "node_id": node_id, "turned_on": turn_on}
