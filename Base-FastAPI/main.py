@@ -18,10 +18,9 @@ def startup_event():
 @app.get("/read_node_92")
 def read_node_92(request: Request):
     bacnet_client = request.app.state.bacnet_client
-    all_data = bacnet_client.get_data()
-    node_92_data = next((item for item in all_data if item['node_id'] == 'node_92'), None)
+    node_92_data = bacnet_client.get_node_data('node_92')
     if not node_92_data:
-        return {"error": "node_92 not found in data"}
+        return {"error": "node_92 not found or failed to read"}
     sensors = node_92_data['sensors']
     if hasattr(sensors, 'to_dict'):
         sensors = sensors.to_dict()

@@ -350,6 +350,55 @@ class Bacnet_Client(object):
 
         return new_data
 
+    def get_node_data(self, node_id):
+        _log.debug(f"get_node_data({node_id})...")
+        sensors = Sensors(self._sensors)
+        if node_id not in self._nodes:
+            return None
+
+        tmp_sensors = copy(sensors)
+        err_counter = 0
+        bac_id = int(self._nodes[node_id]['src_name'])
+        dest_addrs = self._bacnet_dest['device_address']
+
+        pt_list = get_point_list(dest_addrs, bac_id, tmp_sensors)
+        ts = datetime.now().timestamp()
+        read_thread = ReadPointListThread(pt_list, self._this_application)
+        deferred(read_thread.start)
+        _log.debug("%r...", read_thread)
+        run()
+        _log.debug("%r", read_thread)
+
+        for request, response in zip(pt_list, read_thread.response_values):
+            sensor_id = request[3]
+            value = response
+            _log.debug("sensor_id: %s, value: %s", sensor_id, value)
+            if value is None:
+                err_counter += 1
+            tmp_sensors.set_sensor_value(
+                self._sensors[sensor_id]['src_name'],
+                utils.mround(value, self._sensors[sensor_id].get('mround', 0.01))
+            )
+
+        sensor_count = get_active_sensors_count(sensors)
+        if err_counter == sensor_count - 1:
+            _log.warning(
+                "err_counter: %s active sensors: %s, skipping the node!!!",
+                err_counter, sensor_count - 1
+            )
+            return None
+
+        tmp_sensors.set_sensor_value(
+            'Time Stamp',
+            utils.mround(ts, self._sensors['sensor_0'].get('mround', 0.01))
+        )
+
+        return {
+            'node_id': node_id,
+            'src_name': self._nodes[node_id]['src_name'],
+            'sensors': tmp_sensors,
+        }
+
 
 def parse_argv():
     parser = argparse.ArgumentParser(description='Main ')
