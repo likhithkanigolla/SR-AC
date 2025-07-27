@@ -399,6 +399,43 @@ class Bacnet_Client(object):
             'sensors': tmp_sensors,
         }
 
+    def set_ac_onoff(self, node_id, turn_on):
+        """
+        Send a BACnet WritePropertyRequest to turn the AC on or off for the given node.
+        """
+        node_info = self._nodes.get(node_id)
+        if not node_info:
+            return {"error": f"Node {node_id} not found"}
+        bac_id = int(node_info['src_name'])
+        dest_addrs = self._bacnet_dest['device_address']
+        sensor_id = None
+        for sid, sdef in self._sensors.items():
+            if sdef.get('om2m_cnt') == 'Start Stop Status':
+                sensor_id = sid
+                break
+        if not sensor_id:
+            return {"error": "Start Stop Status sensor not found in config"}
+        object_type = self._sensors[sensor_id]['data_type']
+        instance_id = int(self._sensors[sensor_id]['src_name']) + bac_id * 256
+        value = 1 if turn_on else 0
+        from bacpypes.apdu import WritePropertyRequest
+        from bacpypes.primitivedata import Boolean
+        from bacpypes.pdu import Address
+        from bacpypes.core import deferred, run
+        from bacpypes.iocb import IOCB
+        request_apdu = WritePropertyRequest(
+            objectIdentifier=(object_type, instance_id),
+            propertyIdentifier='presentValue',
+            propertyValue=Boolean(value),
+        )
+        request_apdu.pduDestination = Address(dest_addrs)
+        iocb = IOCB(request_apdu)
+        deferred(self._this_application.request_io, iocb)
+        run()
+        if iocb.ioError:
+            return {"error": str(iocb.ioError)}
+        return {"status": "success", "node_id": node_id, "turned_on": turn_on}
+
 
 def parse_argv():
     parser = argparse.ArgumentParser(description='Main ')
