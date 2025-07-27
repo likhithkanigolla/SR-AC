@@ -13,12 +13,12 @@
 '''
     monkey patch at the start before calling any other imports
 '''
-import gevent
-from gevent import monkey
+# import gevent
+# from gevent import monkey
 
-monkey.patch_all(thread=False, select=False)
+# monkey.patch_all(thread=False, select=False)
 
-from gevent import Greenlet
+# from gevent import Greenlet
 
 import json
 import logging
@@ -377,19 +377,20 @@ def get_decimal_digits(x):
     return count
 
 
-class BlinkStatusLed(Greenlet):
+class BlinkStatusLed:
     """
         usage:
             # start blinking status led
-            blink_led = BlinkStatusLed(1, fn_led_on, fn_led_off)
-            blink_led.start()
+            # Requires gevent and Greenlet. If you need this, uncomment gevent imports above.
+            # blink_led = BlinkStatusLed(1, fn_led_on, fn_led_off)
+            # blink_led.start()
 
             # stop blinking status led
-            blink_led.stop()
+            # blink_led.stop()
     """
 
     def __init__(self, interval, fn_led_on, fn_led_off):
-        Greenlet.__init__(self)
+        # Greenlet.__init__(self)
         self.interval = interval
         self._blink = True
         self._fn_led_on = fn_led_on
@@ -400,7 +401,7 @@ class BlinkStatusLed(Greenlet):
         while self._blink:
             # _log.info('LED ON')
             self._fn_led_on()
-            gevent.sleep(self.interval)
+            # gevent.sleep(self.interval)  # Requires gevent
             # _log.info('LED OFF')
             self._fn_led_off()
         return
